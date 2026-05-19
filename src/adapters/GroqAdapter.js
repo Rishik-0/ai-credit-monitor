@@ -1,23 +1,26 @@
 import BaseAdapter from './BaseAdapter';
 
-export default class GeminiAdapter extends BaseAdapter {
+export default class GroqAdapter extends BaseAdapter {
   async fetchUsage() {
     const start = Date.now();
     try {
-      // Hit a standard Gemini API endpoint to verify the key is valid
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
+      const res = await fetch('https://api.groq.com/openai/v1/models', {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
       
       if (!res.ok) {
-        const err = new Error('Failed to verify Gemini API key');
+        const err = new Error('Failed to fetch Groq usage');
         err.status = res.status;
         throw err;
       }
 
       const latency = Date.now() - start;
-      // Return mock quota data as requested for the lightweight extension
+      
       return {
-        name: 'Gemini Pro',
-        type: 'Tokens',
+        name: 'Groq',
+        type: 'Ping',
         used: null,
         limit: null,
         details: {
@@ -27,11 +30,11 @@ export default class GeminiAdapter extends BaseAdapter {
         }
       };
     } catch (error) {
-      console.error('Error fetching Gemini usage:', error);
+      console.error('Error fetching Groq usage:', error);
       const is429 = error.status === 429 || (error.message && error.message.includes('429'));
       return {
-        name: 'Gemini Pro',
-        type: 'Tokens',
+        name: 'Groq',
+        type: 'Ping',
         used: null,
         limit: null,
         details: {

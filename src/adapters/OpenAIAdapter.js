@@ -2,6 +2,7 @@ import BaseAdapter from './BaseAdapter';
 
 export default class OpenAIAdapter extends BaseAdapter {
   async fetchUsage() {
+    const start = Date.now();
     try {
       // Calculate dates for the current billing cycle (start of month to today/end of month)
       const now = new Date();
@@ -32,18 +33,37 @@ export default class OpenAIAdapter extends BaseAdapter {
       }
 
       if (!subRes.ok && !usageRes.ok) {
-        throw new Error('Failed to fetch data from OpenAI API (check API key permissions)');
+        const err = new Error('Failed to fetch data from OpenAI API');
+        err.status = subRes.status || usageRes.status;
+        throw err;
       }
 
+      const latency = Date.now() - start;
       return {
         name: 'OpenAI',
         type: 'Currency',
         used: used,
-        limit: limit
+        limit: limit,
+        details: {
+          status: 'Active',
+          latency: latency + 'ms',
+          lastSynced: new Date().toLocaleTimeString()
+        }
       };
     } catch (error) {
       console.error('Error fetching OpenAI usage:', error);
-      throw error;
+      const is429 = error.status === 429 || (error.message && error.message.includes('429'));
+      return {
+        name: 'OpenAI',
+        type: 'Currency',
+        used: 0,
+        limit: 0,
+        details: {
+          status: is429 ? 'Rate Limited' : 'Error',
+          latency: '-',
+          lastSynced: '-'
+        }
+      };
     }
   }
 }

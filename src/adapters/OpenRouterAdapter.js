@@ -1,25 +1,29 @@
 import BaseAdapter from './BaseAdapter';
 
-export default class GeminiAdapter extends BaseAdapter {
+export default class OpenRouterAdapter extends BaseAdapter {
   async fetchUsage() {
     const start = Date.now();
     try {
-      // Hit a standard Gemini API endpoint to verify the key is valid
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${this.apiKey}`);
+      const res = await fetch('https://openrouter.ai/api/v1/auth/key', {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
       
       if (!res.ok) {
-        const err = new Error('Failed to verify Gemini API key');
+        const err = new Error('Failed to fetch OpenRouter usage');
         err.status = res.status;
         throw err;
       }
 
+      const data = await res.json();
       const latency = Date.now() - start;
-      // Return mock quota data as requested for the lightweight extension
+      
       return {
-        name: 'Gemini Pro',
-        type: 'Tokens',
-        used: null,
-        limit: null,
+        name: 'OpenRouter',
+        type: 'Credits',
+        used: data.data.usage,
+        limit: data.data.limit,
         details: {
           status: 'Active',
           latency: latency + 'ms',
@@ -27,13 +31,13 @@ export default class GeminiAdapter extends BaseAdapter {
         }
       };
     } catch (error) {
-      console.error('Error fetching Gemini usage:', error);
+      console.error('Error fetching OpenRouter usage:', error);
       const is429 = error.status === 429 || (error.message && error.message.includes('429'));
       return {
-        name: 'Gemini Pro',
-        type: 'Tokens',
-        used: null,
-        limit: null,
+        name: 'OpenRouter',
+        type: 'Credits',
+        used: 0,
+        limit: 0,
         details: {
           status: is429 ? 'Rate Limited' : 'Error',
           latency: '-',
