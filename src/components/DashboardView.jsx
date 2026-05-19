@@ -89,6 +89,18 @@ export default function DashboardView({ providers, isSyncing, isCoolingDown, syn
               <div className="flex justify-between items-center mb-3">
                 <div className="flex items-center gap-2">
                   <span className="text-slate-200 font-medium text-sm tracking-tight">{provider.name}</span>
+                  {provider.name === 'YouTube API' && (
+                    <span 
+                      className="text-slate-400 cursor-help" 
+                      title="Calculated via local ledger. Does not reflect external usage."
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                    </span>
+                  )}
                   {provider.details && provider.details.status !== 'Active' && (
                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-500/10 text-slate-400 border border-slate-500/20">
                       {provider.details.status}
