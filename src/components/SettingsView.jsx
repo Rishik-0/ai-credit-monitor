@@ -7,7 +7,10 @@ const apiConfigs = [
   { id: 'anthropic', name: 'Anthropic', placeholder: 'sk-ant-...' },
   { id: 'youtube', name: 'YouTube Data v3', placeholder: 'AIzaSy...' },
   { id: 'groq', name: 'Groq', placeholder: 'gsk_...' },
-  { id: 'replicate', name: 'Replicate', placeholder: 'r8_...' }
+  { id: 'replicate', name: 'Replicate', placeholder: 'r8_...' },
+  { id: 'elevenlabs', name: 'ElevenLabs', placeholder: 'xi-...' },
+  { id: 'huggingface', name: 'Hugging Face', placeholder: 'hf_...' },
+  { id: 'perplexity', name: 'Perplexity', placeholder: 'pplx-...' }
 ];
 
 export default function SettingsView({ apiKeys, setApiKeys, handleSave, setView }) {

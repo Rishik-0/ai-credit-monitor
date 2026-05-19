@@ -6,6 +6,9 @@ import YouTubeAdapter from './adapters/YouTubeAdapter';
 import OpenRouterAdapter from './adapters/OpenRouterAdapter';
 import GroqAdapter from './adapters/GroqAdapter';
 import ReplicateAdapter from './adapters/ReplicateAdapter';
+import ElevenLabsAdapter from './adapters/ElevenLabsAdapter';
+import HuggingFaceAdapter from './adapters/HuggingFaceAdapter';
+import PerplexityAdapter from './adapters/PerplexityAdapter';
 import { encryptKey, decryptKey } from './utils/encryption';
 import SettingsView from './components/SettingsView';
 import DashboardView from './components/DashboardView';
@@ -39,7 +42,7 @@ const getStorage = (keys, callback) => {
 
 function App() {
   const [view, setView] = useState('dashboard');
-  const [apiKeys, setApiKeys] = useState({ openai: '', gemini: '', anthropic: '', youtube: '', openrouter: '', groq: '', replicate: '' });
+  const [apiKeys, setApiKeys] = useState({ openai: '', gemini: '', anthropic: '', youtube: '', openrouter: '', groq: '', replicate: '', elevenlabs: '', huggingface: '', perplexity: '' });
   const [providers, setProviders] = useState([]);
   const [isSyncing, setIsSyncing] = useState(false);
   const [lastSyncTime, setLastSyncTime] = useState(0);
@@ -48,7 +51,7 @@ function App() {
   const isCoolingDown = Date.now() - lastSyncTime < 15000;
 
   useEffect(() => {
-    getStorage(['openai_key', 'gemini_key', 'anthropic_key', 'youtube_key', 'openrouter_key', 'groq_key', 'replicate_key', 'last_sync_time', 'cached_providers'], (result) => {
+    getStorage(['openai_key', 'gemini_key', 'anthropic_key', 'youtube_key', 'openrouter_key', 'groq_key', 'replicate_key', 'elevenlabs_key', 'huggingface_key', 'perplexity_key', 'last_sync_time', 'cached_providers'], (result) => {
       setApiKeys({
         openai: decryptKey(result.openai_key),
         gemini: decryptKey(result.gemini_key),
@@ -57,6 +60,9 @@ function App() {
         openrouter: decryptKey(result.openrouter_key),
         groq: decryptKey(result.groq_key),
         replicate: decryptKey(result.replicate_key),
+        elevenlabs: decryptKey(result.elevenlabs_key),
+        huggingface: decryptKey(result.huggingface_key),
+        perplexity: decryptKey(result.perplexity_key),
       });
       setLastSyncTime(result.last_sync_time ? parseInt(result.last_sync_time, 10) : 0);
       
@@ -93,7 +99,7 @@ function App() {
   const syncData = async () => {
     if (Date.now() - lastSyncTime < 15000) return;
     setIsSyncing(true);
-    getStorage(['openai_key', 'gemini_key', 'anthropic_key', 'youtube_key', 'openrouter_key', 'groq_key', 'replicate_key'], async (result) => {
+    getStorage(['openai_key', 'gemini_key', 'anthropic_key', 'youtube_key', 'openrouter_key', 'groq_key', 'replicate_key', 'elevenlabs_key', 'huggingface_key', 'perplexity_key'], async (result) => {
       const activeProviders = [];
 
       const openAiKeyDecrypted = decryptKey(result.openai_key);
@@ -173,6 +179,39 @@ function App() {
         }
       }
 
+      const elevenLabsKeyDecrypted = decryptKey(result.elevenlabs_key);
+      if (elevenLabsKeyDecrypted) {
+        try {
+          const adapter = new ElevenLabsAdapter(elevenLabsKeyDecrypted);
+          const data = await adapter.fetchUsage();
+          activeProviders.push(data);
+        } catch (error) {
+          console.error('Error in ElevenLabsAdapter flow:', error);
+        }
+      }
+
+      const huggingFaceKeyDecrypted = decryptKey(result.huggingface_key);
+      if (huggingFaceKeyDecrypted) {
+        try {
+          const adapter = new HuggingFaceAdapter(huggingFaceKeyDecrypted);
+          const data = await adapter.fetchUsage();
+          activeProviders.push(data);
+        } catch (error) {
+          console.error('Error in HuggingFaceAdapter flow:', error);
+        }
+      }
+
+      const perplexityKeyDecrypted = decryptKey(result.perplexity_key);
+      if (perplexityKeyDecrypted) {
+        try {
+          const adapter = new PerplexityAdapter(perplexityKeyDecrypted);
+          const data = await adapter.fetchUsage();
+          activeProviders.push(data);
+        } catch (error) {
+          console.error('Error in PerplexityAdapter flow:', error);
+        }
+      }
+
       setProviders(activeProviders);
       const newSyncTime = Date.now();
       setLastSyncTime(newSyncTime);
@@ -190,6 +229,9 @@ function App() {
       openrouter_key: encryptKey(apiKeys.openrouter),
       groq_key: encryptKey(apiKeys.groq),
       replicate_key: encryptKey(apiKeys.replicate),
+      elevenlabs_key: encryptKey(apiKeys.elevenlabs),
+      huggingface_key: encryptKey(apiKeys.huggingface),
+      perplexity_key: encryptKey(apiKeys.perplexity),
       last_sync_time: 0,
       openai_alert_sent: false,
       gemini_pro_alert_sent: false,
@@ -198,6 +240,9 @@ function App() {
       openrouter_alert_sent: false,
       groq_alert_sent: false,
       replicate_alert_sent: false,
+      elevenlabs_alert_sent: false,
+      hugging_face_alert_sent: false,
+      perplexity_alert_sent: false,
     });
     setLastSyncTime(0);
     setView('dashboard');
